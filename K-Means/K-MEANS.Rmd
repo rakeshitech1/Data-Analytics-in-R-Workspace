@@ -1,0 +1,95 @@
+---
+title: "Clustering in R"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+This article consists the tutorial on how to cluster data in R. Clustering is a unsupervised learning technique in which the dataset has no target variable $Y$. Clustering mainly aims at finding similarities between the features $X_i$ using a similarity metric and grouping them together into clusters/groups.
+
+K-Means clustering is a clustering algorithm which aims at clustering __continious(numeric)__ data into $K$ clusters which are needed to be specified before feeding data to the model.__Scaling__ of features matter in k-means algorithm as it computes the euclidean distance between the cluster centroid and the data points in each iteration, hence we need to standardize the variables if they are skewed or unscaled.
+
+We solve for a objective in k-means i.e we want to minimize the within cluster variance $WCV$ , which simply implies that the points within a cluster should be as close as possible to the cluster centroid(mean for that cluster).
+$$minimize {\sum_{k=1}^{K} WCV(C_k) } $$ over the clusters $c_1,c_2,c_3.....c_k$.
+
+
+The function can be further written as- 
+$$minimize {\sum_{k=1}^{K} \frac{1}{|C_k|} \sum_{i \in C_k}\sum_{j=1}^{p}(x_{ij}-\bar x_{kj} )^2}$$
+
+, where $K$ are the number of clusters and $|C_k|$ are the number of observations in $K^{th}$ cluster, $p$ are the number of variables,and most importantly $\bar x_{kj}$ is the mean of the $K^{th}$ cluster i.e the __centroid__ value for that cluster.
+
+The centroid value for a cluster is equal to the mean of the observations in that cluster i.e $$ \bar x_{kj} = \frac{1}{|C_k|} \sum_{i \in C_k} x_{ij} $$.
+
+This simply means that we want to partition the observations into $K$-clusters such that the total within-cluster variation ,summed over all $K$-clusters is as small as possible i.e they are as close to each other as possible.
+
+
+### The K-means algorithm
+
+1) Randomly assign a number 1 to K,to each of the observations. These serves as initial cluster assignments.
+
+2) Iterate until the cluster assignments stop changing :
+      
+       2.a For each of the k-clusters compute the cluster __centroid__. The $K^{th}$ cluster centroid is the __mean__ for the observations in the $K^{th}$ cluster.
+       
+       2.b Assign each observation to the cluster whose __centroid__ is closest to it by calculating the distance between them.(where closest is defined by the distance metric-Euclidean distance).
+       
+       
+3) Stop:if cluster assignments stop changing , else go to : step 2).
+
+
+The algorithm is guaranteed to decrease the value of the objective $WCV(C_k)$. The __local minima__  will be founded by K-means ,however it is not guaranteed that it will give us the __global minima__.
+
+Local minima is the smallest value of a function within a range.
+
+Global minima is the smallest value of a function over the enrtire domain. 
+
+So this means that K-means will land you in a valley, but not necessarily in the lowest/deepest valley because the function is not __CONVEX__.
+
+
+--------------
+
+### Implementing K-means in R
+
+K-means can work in any dimension but for purposes of demonstration I will use it in 2-D. I am going to generate some fake data and try to cluster it.
+
+```{r}
+#setting seed
+set.seed(101)
+x=matrix(rnorm(100^2),100,2) # a 100 x 2 dim matrix
+xmean = matrix(rnorm(8,sd=4),4,2) # a 4 x 2 dim matrix, as we want 4 clusters
+
+which=sample(1:4,100,replace=T) #random sample 
+x=x+xmean[which,]
+
+#plotting the data
+plot(x,col=which,pch=19)
+
+```
+
+Now the plot above shows 4 clusters. We know the clusters but now let's feed the data to k-means and check out its performance and how it clusters the data.
+
+
+```{r}
+km.out<-kmeans(x,4,nstart=15)
+km.out
+
+```
+Let's plot the clusters made by K-means algorithm.
+```{r}
+
+plot(x,col=km.out$cluster,cex=2,pch=1,lwd=2)
+points(x,col=which,pch=19)
+points(x,col=c(4,3,2,1)[which],pch=19)
+
+```
+
+Now the inner circles represent the actual cluster assignments , whereas the outer circles represent the cluster assignments by K-means algorithm.
+So we can easily notice the mismatches.
+ 
+---------------------------------
+
+##Conclusion
+
+So this was a small article and tutorial on how to implement K-means clustering in R. K-means clustering is a nice method to cluster numeric data. The only drawback is we need some domain knowledge to tell the algorithm about the number fo clusters we want a-priori. Secondly, K-means is suited only for data which is __normally distributed__ or either standardized. So scaling of variables actually matter a lot in K-means clustering.
+
+

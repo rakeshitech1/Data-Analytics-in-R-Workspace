@@ -1,0 +1,135 @@
+---
+title: "Principal Components Analysis"
+author: "Anish Singh Walia"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+##Unsupervised Learning
+
+__Unsupervised__ learning is a machine learning technique in which the dataset has no target variable or no response value-$Y$.The data is unlabelled.
+Simply saying,there is no target value to supervise the learning process of a learner unlike in __Supervised__ learning where we had training examples which had both input variables $X_i$ and target variable-$Y$ -{$(x_i,y_i)$} and by looking and learning from the training examples the learner used to generate a *mapping* function(also called a __hypothesis__) $f : x_i-> y$ which mapped $x_i$ values to $y$ and learned the relationship between input variables and target variable so that we could generalize it to some random unseen test examples and predict the target value.
+
+The best example of unsupervised learning is when a small child given some unlabelled pictures of cats and dogs , so by only looking at the structural similarities and disimilarities between the images , he classifies one as a dog and other as cat.
+
+There are lots of examples of unsupervised learning around us.
+
+__Unsupervised learning is mostly used as a preprocessing tool for supervised learning__.e.g-like PCA could be used to select a linear combination of predictors-$X_i$ which explains the most variability in the data , and reduce a high-dimentional dataset to a lower dimentional view with only most relevant and important features which can be used as inputs in a supervised learning model.
+
+e.g If we have a dataset with 100 predictors and we wanted to generate a model,it would be highly inefficient to use all those 100 predictors because that would increase the variance and complexity of the model and which in turn would lead to __overfitting__.Instead what PCA does is find 10 most correlated variables and linearly combine them to generate a principal component -$Z_1$. 
+
+----------------------
+
+
+##Principal Components Analysis
+
+PCA introduces a lower-dimentional representation of the dataset.It finds a sequence of linear combination of the variables called the principal components-$Z_1,Z_2...Z_m$ that explain the maximum variance in the data and are mutually uncorrelated.
+
+What we try to do is find most relevant set of variables and simply linearly combine the set of variables into a single variable-$Z_m$.
+
+1)The first principal component $PC_1$ has the highest variance across data.
+
+2)The second principal component $PC_2$ is uncorrelated with $PCA_1$ which also has high variance.
+
+We have tons of correlated variables in a high dimentional dataset and what PCA tries to do is pair and combine them to a set of some important variables that summarize all information in the data.
+
+PCA will give us new set of variables called principal components which could be further be used as inputs in a supervised learning model.
+So now we have lesser and most important set of variables paired together to form a new single variable which explains most variance in data.
+This technique is often termed as __Dimentionality Reduction__ which is famous technique to do feature selection and use only relevant features in the Model.
+
+
+###Details
+
+1) we have a set of input column vectors $x_1,x_2,x_3.....x_p$ with $n$ observations in dataset.
+
+2) The $1^{st}$ principal component $Z_1$ of a set of features is the __normalized linear combination__ of the features $x_1,x_2....x_p$.
+    $$Z_1=z_{i1} = \sum_{i=1}^n \phi_{11}x_1 + \phi_{{21}}x_2 + \phi_{31}x_3 + .........\phi_{pi}x_p $$,
+where n=no of observations, p = number of variables.It is a linear combination to find out the highest variance across data.
+By normalized I mean $\sum_{j=1}^{p} \phi_{j1}^2 = 1$.
+
+3) We refer to the weights $\phi_{pi}$ as __Loadings__.The loadings make up the principal components loading vector.
+$$\phi_1 = (\phi_{11},\phi_{21},\phi_{31}......,\phi_{p1})^T$$ is the loadings vector for $PC_1$.
+
+4) We constrain the loadings so that their sum of squares could be 1 , as otherwise setting these elements to be arbitarily large in absolute value could result in an arbitarily large variance.
+
+
+
+The first Principal component solves the below optimization problem of maximizing variance across the components--
+
+$$maximize: \frac{1}{n} \sum_{i=1}^n \sum_{j=1}^p (\phi{ji}.X_{ij})^2  subject \ to \sum_{j=1}^p \phi_{ji}^2=1  $$
+Here each principal component has mean 0.
+
+The above problem can be solved via Single value decomposition of matrix $X$ ,which is a standard technique in linear algebra.
+
+
+Enough maths now let's start implementing PCA in R.
+
+--------------------------------------
+
+We will use USAarrests data
+
+##Implementing PCA in R
+
+```{r}
+?USArrests
+#dataset which contains Violent Crime Rates by US State
+dim(USArrests)
+dimnames(USArrests)
+
+
+```
+
+```{r}
+#finding mean of all 
+apply(USArrests,2,mean)
+apply(USArrests,2,var) #
+
+
+```
+
+There is a lot of difference in variances of each variables. In PCA mean does not playes a role , but variance plays a major role in defining PC so very large differences in variance value of a variable will definately dominate the PC.
+We need to standardize the variable so as to get mean $\mu=0$  and variance $\sigma^2=1$.
+To standardize we use formula$x' = \frac{x - mean(x)}{sd(x)}$.
+
+The function prcomp() will do the needful of standardizing the variables.
+
+
+```{r}
+pca.out<-prcomp(USArrests,scale=TRUE)
+pca.out
+#summary of the PCA
+summary(pca.out)
+names(pca.out)
+
+
+```
+
+Now as we can see maximum % of variance is explained by PC1 , and all PCs are mutually uncorrelated.Around 62 % of variance is explained by $PC_1$.
+
+
+Let's build a biplot to understand better.
+
+```{r}
+biplot(pca.out,scale = 0, cex=0.65)
+
+```
+
+
+Now in the above plot red colored arrows represent the variables and each direction represent the direction which explains the most variation.
+eg for all the countries in the direction of 'UrbanPop' are countries with most urban-population and opposite to tht direction are the countries with least .
+So this is how we interpret our Biplot.
+
+
+
+--------------
+
+
+##Conclusion
+
+PCA is a great preprocessing tool for picking out the most relevant linear combination of variables and use them in our predictive model.It helps us find out the variables which explain the most variation in the data and only use them.PCA plays a major role in the data analysis process before going for advanced analytics.PCA only looks the input variables and them pair them.
+
+The only __drawback__ PCA has is that it generates the principal components in a __unsupervised__ manner i.e without looking the __target__ values ,hence the principal components which explain the most variation in dataset without target-$Y$ variable,may or may not explain good percentage of variance in the response variable$Y$ which could affect the perfomance of the predictive model. 
+
+Hope you guys liked the article , make sure to like and share it. 
+Happy coding!!

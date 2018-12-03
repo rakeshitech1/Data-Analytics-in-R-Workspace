@@ -1,0 +1,118 @@
+>>>Styling narrative sections
+You can use Markdown to embed formatting instructions into your text. For example, you can make a word italicized by surrounding it in asterisks, bold by surrounding it in two asterisks, and monospaced (like code) by surrounding it in backticks:
+
+*italics*
+**bold**
+`code`
+
+You can turn a word into a link by surrounding it in hard brackets and then placing the link behind it in parentheses, like this:
+
+[RStudio](www.rstudio.com)
+
+>>>To create titles and headers, use leading hastags. The number of hashtags determines the header's level:
+
+# First level header
+## Second level header
+### Third level header
+
+To make a bulleted list in Markdown, place each item on a new line after an asterisk and a space, like this:
+
+* item 1
+* item 2
+* item 3
+
+You can make an ordered list by placing each item on a new line after a number followed by a period followed by a space, like this
+
+1. item 1
+2. item 2
+3. item 3
+
+In each case, you need to place a blank line between the list and any paragraphs that come before it.
+
+>>>LaTeX equations
+
+You can also use the Markdown syntax to embed latex math equations into your reports. To embed an equation in its own centered equation block, surround the equation with two pairs of dollar signs like this,
+
+$$1 + 1 = 2$$
+
+To embed an equation inline, surround it with a single pair of dollar signs, like this: $1 + 1 = 2$.
+
+>>>You can embed R code into your R Markdown report with the knitr syntax. To do this, surround your code with two lines: one that contains ```{r} and one that contains ```. The result is a code chunk that looks like this:
+
+```{r}
+# some code
+```
+When you render the report, R will execute the code. If the code returns any results, R will add them to your report.
+
+>>>Popular chunk options
+
+Three of the most popular chunk options are echo, eval and results.
+
+If echo = FALSE, R Markdown will not display the code in the final document (but it will still run the code and display its results unless told otherwise).
+
+If eval = FALSE, R Markdown will not run the code or include its results, (but it will still display the code unless told otherwise).
+
+If results = 'hide', R Markdown will not display the results of the code (but it will still run the code and display the code itself unless told otherwise).
+
+>>>Inline R code
+
+You can embed R code into the text of your document with the `r ` syntax. Be sure to include the lower case r in order for this to work properly. R Markdown will run the code and replace it with its result, which should be a piece of text, such as a character string or a number.
+
+For example, the line below uses embedded R code to create a complete sentence:
+
+The factorial of four is `r factorial(4)`.
+
+When you render the document the result will appear as:
+
+The factorial of four is 24.
+
+Alternative output formats
+
+You can render the same R Markdown file into several different formats. There are two ways to change a file's output format.
+
+First, you can click the triangle icon next to "Knit HTML" at the bottom of the pane that displays your R Markdown file. This will open a drop down menu that gives you the choice of rendering as an HTML document or a pdf document.
+
+Second, you can change the output field in the YAML block at the top of your document. For example, this YAML block will create an HTML file:
+
+---
+output: html_document
+---
+This one will create a pdf file:
+
+---
+output: pdf_document
+---
+This one will create a MS Word file:
+
+---
+output: word_document
+---
+And this one will create a Markdown file:
+
+---
+output: md_document
+---
+
+>>>Create slideshows
+
+You can also export your file as a slideshow by changing the output field to:
+
+---
+output: beamer_presentation
+---
+which creates a beamer pdf slideshow,
+
+---
+output: ioslides_presentation
+---
+which creates an ioslides HTML slideshow or
+
+---
+output: slidy_presentation
+---
+which creates a slidy HTML slideshow.
+
+R Markdown will start a new slide at each first or second level header in your document. You can insert additional slide breaks with Markdown's horizontal rule syntax:
+
+***
+Everywhere you add these three asterisks in your text, pandoc will create a new slide.

@@ -1,0 +1,29 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Exploring the mtcars data set
+
+Have you ever wondered whether there is a clear correlation between the gas consumption of a car and its weight?
+To answer this question, we first have to load the `dplyr` and `ggvis` packages.
+
+```{r message = FALSE}
+library(dplyr)
+library(ggvis)
+```
+
+```{r chained, results = 'hide'}
+mtcars %>%
+  group_by(factor(cyl)) %>%
+  ggvis(~mpg, ~wt, fill = ~cyl) %>%
+  layer_points()
+```
+
+The `ggvis` plot gives us a nice visualization of the `mtcars` data set:
+
+```{r ref.label='chained', echo = FALSE}
+```
+
+

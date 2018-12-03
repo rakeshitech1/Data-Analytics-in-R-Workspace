@@ -1,0 +1,156 @@
+---
+title: "Support Vector Machines"
+output:
+  html_notebook: default
+  html_document: default
+---
+
+This article will explain how to implement Support Vector Machines in R and their in depth interpretation.
+
+SVM does not uses any Probability Model as such like other Classifiers use , because it directly looks for a Hyperplane which divides and sagments the data and classes.
+
+General form of a Hyperplane is :
+
+$$\beta_0  + \beta_1X_1  +  \beta_2X_2  + . . .. . \beta_pX_p = 0 $$
+where $p$ is the number of Dimentions.
+
+
+1) For $p=2$ i.e for a 2-D space it is a Line.
+
+2)The vector $(\beta_1,\beta_2,\beta_3...\beta_p) is \ just \ a \ Normal\ vector.$ A vector in simple terms is just a 1-Dimentional Tensor or a 1-D array.
+
+
+
+__Support Vector Classifiers__ are majorly used  for solving a binary clssification problem where we only have 2 class labels say $Y = [-1,1]$ and a bunch of predictors $X_i$ .And what SVM does is that it generates Hyperplanes which in simple terms are just __straight lines or planes__ or are Non-linear curves , and these lines are used to saperate the data or sagment the data into 2 categories or more depending on the type of Classification problem.
+
+We try to find a __plane__ which saperates the classes in some feature space $X_i$.
+
+Another concept in SVM is of *Maximal Margin Classifiers*.What it means is that amongst a set of separating hyperplanes SVM aims at finding the one which maximizes the margin $M$.This simply means that we want to maximize the gap or the distance between the 2 classes from the Decision Boundary(separating plane).
+
+This concept of separating data linearly into 2 different classes using a Linear Separator or a straight linear line is called *__Linear Separability__*.
+
+The term *__Support Vectors__* in SVM are the data points or training examples which are used to define or maximizing the margin.The support vectors are the points which are close to the decision boundary or on the wrong side of the boundary.  
+
+
+
+-------------
+
+###Linear SVM Classifier in R
+
+
+```{r}
+set.seed(10023)
+#generating data
+#a matrix with 20 rows and 2 columns
+x=matrix(rnorm(40),20,2) #predictors
+x
+y=rep(c(-1,1),c(10,10))#Binary response value
+x[y==1,]=x[y==1,]+1 #2 classes are [-1,1]
+
+#plotting the points
+plot(x,col=y+2,pch=19)
+
+```
+
+
+
+
+------------
+
+#### Using the 'e1071' package to fit a SVM classifier
+
+```{r,message=FALSE,warning=FALSE}
+require(e1071)
+#converting to a data frame
+data<-data.frame(x,y=as.factor(y))
+head(data)
+
+svm<-svm(y ~ .,data=data,kernel="linear",cost=10,scale = F)
+#here cost 'c' is a tuning parameter .The larger it is more stable the margin becomes, it is like a Regularization parameter 
+svm
+svm$index #gives us the index of the Support Vectors
+#so we have 10 support vectors
+svm$fitted #to find the fitted values
+
+#Confusion Matrix of Fitted values and Actual Response values
+table(Predicted=svm$fitted,Actual=y)
+
+#accuracy on Training Set
+mean(svm$fitted==y)*100 #has 80 % accuracy on Training Set
+
+#plotting
+plot(svm,data)
+```
+
+
+We can also create our own plot.
+```{r, message=FALSE, warning=FALSE}
+#First Making Grids using a function
+make.grid<-function(x,n=75) {
+  grange=apply(x,2,range)
+  x1=seq(from=grange[1,1],to=grange[2,1],length=n)
+  x2=seq(from=grange[1,2],to=grange[2,2],length=n)
+  expand.grid(X1=x1,X2=x2) #it makes a Lattice for us
+}
+xgrid=make.grid(x) #is a 75x75 matrix
+
+#now predicting on this new Test Set
+ygrid=predict(svm,xgrid)
+
+#plotting the Linear Separator
+plot(xgrid,col=c("red","blue")[as.numeric(ygrid)],pch=19,cex=.2)
+#creates 2 regions
+points(x,col=y+3,pch=19) #adding the points on Plot
+points(x[svm$index,],pch=5,cex=2) #Highlighting the Support Vectors
+```
+In the above Plot the __Highlighted points__ are the Support Vectors which were used in determining the Decision Boundary.
+
+
+--------------
+
+
+####Extracting the Coefficient values of the Linear SVM equation
+
+The $\beta$ here are the coefficient values of the SVM model.As it is a Linear SVM classifier, the linear equation is linearly dependent on the predictors $X_1$ and $X_2$.
+
+
+$y_i=f(x,\beta) = \beta_0 + \beta_1.X_1 + \beta_2X_2$ , is the mathematical equation for the Linear SVM classifier.
+
+
+
+
+```{r}
+beta = drop(t(svm$coefs)%*%x[svm$index,])
+beta
+
+
+```
+
+
+```{r}
+beta0=svm$rho
+beta0 #the intercept value
+#again Plotting
+plot(xgrid,col=c("red","blue")[as.numeric(ygrid)],pch=19,cex=.2)
+#creates 2 regions
+points(x,col=y+3,pch=19) #adding the points on Plot
+points(x[svm$index,],pch=5,cex=2)
+abline(beta0/beta[2],-beta[1]/beta[2],lty=1)#is the Decision boundary or Plane
+#below are for adding the soft margins
+abline((beta0-1)/beta[2],-beta[1]/beta[2],lty=2)
+abline((beta0+1)/beta[2],-beta[1]/beta[2],lty=2)
+```
+In the above plot the dashed lines are actually the __Soft margins__ which are again margins which include the support vectors within or on them. And how small or wide these soft margins becomes depend on the value of our tuning parameter $c$ which we assigned the value as 10 in the above SVM.
+
+
+---------------
+
+
+
+###Conclusion
+
+Support Vector Machines are actually very strong and accurate technique to do Classification.SVM are preferable when the classes are saperated well like in the example we did above we had 10 labels for 1 and 10 for -1.One unique thing about SVMs are that they don't actually follow or use a Conditional Probability Model $Pr(Y | X_i)$ like other classifiers do.
+
+Linear SVM can not always be useful.Linear SVM can only be used when the data is linearly saperable. 
+
+When the the data is __Non linearly saperable__ i.e has Non linearities in it we need to do Feature Expansion i.e do a Non linear transform to the features to convert to higher dimentions and use a Non linear function $f(x,\beta)$ which is Non linear in predictors $X_i$ to get a Non linear Decision Boundary which saperates the data in an enlarged feature space.An example is __Radial SVMs__ which uses a radial __kernel__.

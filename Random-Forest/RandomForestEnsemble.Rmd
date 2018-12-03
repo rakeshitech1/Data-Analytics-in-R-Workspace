@@ -1,0 +1,138 @@
+---
+title: "Random Forests in R"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+
+## Random Forests 
+
+Random Forest is a __Ensembling__ technique which is similar to a famous Ensemble technique called  *__Bagging__* but a different tweak in it. In Random Forests the idea is to __decorrelate__ the several trees which are generated on the different bootstrapped samples from training Data.And then we simply reduce the Variance of the Trees by averaging them. 
+
+Averaging the Trees helps us to reduce the variance and also improve the Perfomance of Decision Trees on Test Set and eventually avoid Overfitting.
+
+The idea is to build a lots of Trees in such a way so as to make the *Correlation* between the Trees smaller.
+
+Another major difference is that we only consider a Random subset of predictors $m$ each time we do a split on training examples.Whereas usually in Trees we consider all the predictors while doing a split and choose best amongst them. Typically  \(m=\sqrt{p}\) where $p$ are the number of predictors.
+
+Now it seems crazy to throw away lots of predictors but it actually makes sense because the effect of doing so is that each tree uses different predictors to split data at different times.
+
+*So by doing this trick of throwing away Predictors, we have decorrelated the Trees and the resulting average seems a little better. *
+
+
+
+-----
+
+
+## Implementing Random Forests in R
+
+Loading the Packages
+
+```{r,warning=FALSE,message=FALSE}
+require(randomForest)
+require(MASS)#Package which contains the Boston housing dataset
+
+dim(Boston)
+attach(Boston)
+set.seed(101)
+
+```
+
+
+#####Saperating Training and Test Sets
+
+We will use 300 samples in Training Set
+
+```{r}
+#training Sample with 300 observations
+train<-sample(1:nrow(Boston),300)
+?Boston  
+
+```
+
+We are going to use variable $'medv'$ as the Response variable , which is the Median Housing Value.
+We will fit 500 Trees. 
+```{r}
+Boston.rf<-randomForest(medv ~ . , data = Boston , subset = train)
+Boston.rf
+```
+The above MSE and Variance explained are actually calculated using *Out of Bag Error Estimation*.In this $\frac23$rd of Training data is used in tranining and the reamining $\frac13$ are used to Validate the Trees.Also the number of variable randomly selected  at each split are 4.
+
+
+Plotting the Random Forests
+```{r}
+plot(Boston.rf)
+```
+
+
+
+-----
+
+
+### Now we can compare the Out of Bag Sample Errors and Error on Test set
+
+The above Random Forest model chose Randomly 4 variables to be considered at each split.
+We could now try all possible 13 predictors which can be considered at each split.
+
+```{r}
+oob.err<-double(13)
+test.err<-double(13)
+
+#mtry is no of Variables randomly chosen at each split
+for(mtry in 1:13) 
+{
+  rf=randomForest(medv ~ . , data = Boston , subset = train,mtry=mtry,ntree=400) 
+  oob.err[mtry] = rf$mse[400] #Error of all Trees fitted
+  
+  pred<-predict(rf,Boston[-train,]) #Predictions on Test Set for each Tree
+  test.err[mtry]= with(Boston[-train,], mean( (medv - pred)^2)) #Mean Squared Test Error
+  
+  cat(mtry," ")
+  
+}
+
+test.err  
+oob.err
+
+```
+
+
+What happens is that 13 times 400 Trees have been grown.
+
+
+
+---------
+
+
+
+###Comparing both Test Error and Out of Sample Estimation for Random Forests
+
+```{r}
+
+matplot(1:mtry , cbind(oob.err,test.err), pch=19 , col=c("red","blue"),type="b",ylab="Mean Squared Error",xlab="Number of Predictors Considered at each Split")
+legend("topright",legend=c("Out of Bag Error","Test Error"),pch=19, col=c("red","blue"))
+
+```
+
+
+Now what we observe is that the Red line is the Out of Bag Error Estimates and the Blue Line is the Error calculated on Test Set.Both curves are quiet smooth and the error estimates are somewhat correlated too.
+The Error Tends to be minimized at around $mtry = 4$.  
+
+On the Extreme Right Hand Side of the above Plot we considered all possible 13 predictors at each Split which is __Bagging__.
+
+
+----
+
+
+
+### Conclusion
+
+
+Random Forests are a very Nice technique to fit a Stronger Model by averaging Lots of Trees and reduicing the Variance and avoiding Overfitting in Trees build on Training Data.Decision Trees themselves are bad in Prediction on test set,but when used with Ensembling Techniques like Bagging , Random Forests etc their Predictive perfomance are improved a lot.
+
+
+
+
+
+

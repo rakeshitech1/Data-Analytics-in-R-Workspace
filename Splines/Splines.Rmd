@@ -1,0 +1,110 @@
+---
+title: "Splines"
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+---
+
+#What are Splines ?
+
+Splines are used to add __Non linearities__ to a Linear Model and it is a Flexible Technique than Polynomial Regression.Splines Fit the data very *__smoothly__* in most of the cases where polynomials would become wiggly and overfit the training data.Polynomials 
+tends to get wiggly and fluctuating at the tails which sometimes __overfits__ the training data and doesn't *__generalizes well due to high variance at high degrees of polynomial__.*
+
+
+
+```{r,message=FALSE,warning=FALSE}
+#loading the Splines Packages
+require(splines)
+#ISLR contains the Dataset
+require(ISLR)
+attach(Wage)
+
+agelims<-range(age)
+#Generating Test Data
+age.grid<-seq(from=agelims[1], to = agelims[2])
+
+```
+
+---
+
+
+### Fitting a Cubic Spline with 3 Knots(Cutpoints)
+What It does is that it transforms the Regression Equation by transforming the Variables with a truncated *__Basis__* Function- $$b(x)$$ ,with continious derivatives upto order 2.
+
+$$\textbf{The order of the continuity}= (d - 1) , \ where \ d \ is \ the \ number \ of \ degrees \ of \ polynomial$$
+
+$$\textbf {The Regression Equation Becomes}$$ -
+
+$$f(x) = y_i = \alpha + \beta_1.b_1(x_i)\ +  \beta_2.b_2(x_i)\ + \ .... \beta_{k+3}.b_{k+3}(x_i) \ + \epsilon_i   $$
+
+ $$\bf where \ \bf b_n(x_i)\ is \  The \  Basis \ Function$$.
+ 
+$$\text{The idea here is to transform the variables and add a linear combination of the variables using the Basis power function to the regression function f(x).} $$
+```{r}
+#3 cutpoints at ages 25 ,50 ,60
+fit<-lm(wage ~ bs(age,knots = c(25,40,60)),data = Wage )
+summary(fit)
+#Plotting the Regression Line to the scatterplot   
+plot(age,wage,col="grey",xlab="Age",ylab="Wages")
+points(age.grid,predict(fit,newdata = list(age=age.grid)),col="darkgreen",lwd=2,type="l")
+#adding cutpoints
+abline(v=c(25,40,60),lty=2,col="darkgreen")
+
+```
+The above Plot shows the smoothing and local effect of Cubic Splines , whereas Polynomias might become wiggly and the tail.*__The cubic splines have continious 1st Derivative and continious 2nd derivative.__*
+
+--------
+
+
+###Smoothing Splines 
+
+These are mathematically more challenging but they are more smoother and flexible as well.It does not require the selection of the number of Knots , but require selection of only a __Roughness Penalty__ which accounts for the wiggliness(fluctuations) and controls the roughness of the function and variance of the Model.
+
+$$ \text{Let the RSS(Residual Sum of Squares) be} \ { g(x_i) }$$
+$$ \ minimize \ { g \in RSS} :\ \sum\limits_{i=1}^n ( \ y_i \ - \ g(x_i) \ )^2 + \lambda \ \int g''(t)^2 dt , \quad  \lambda > 0$$
+$$ \text{ where },\ \lambda \int g''(t)^2 dt \  {is \ called \ the \ Roughness \ Penalty. }  $$
+
+$$ \textbf {The Roughness Penalty controls how wiggly g(x) is. The smaller the }  \lambda , \textbf{ the more wiggly and  fluctuating the function is. }$$  
+
+$$\textbf {As} \  \lambda ,\textbf {approcahes}\ \infty , \textbf {the function} \ g(x) \textbf  { becomes linear} . $$
+
+In smoothing Splines we have a __Knot__ at every unique value of $x_i$ .
+
+
+```{r}
+fit1<-smooth.spline(age,wage,df=16)
+plot(age,wage,col="grey",xlab="Age",ylab="Wages")
+points(age.grid,predict(fit,newdata = list(age=age.grid)),col="darkgreen",lwd=2,type="l")
+#adding cutpoints
+abline(v=c(25,40,60),lty=2,col="darkgreen")
+lines(fit1,col="red",lwd=2)
+legend("topright",c("Smoothing Spline with 16 df","Cubic Spline"),col=c("red","darkgreen"),lwd=2)
+
+```
+
+---
+
+
+### Implementing Cross Validation to select value of $\lambda$  and Implement Smoothing Splines 
+
+
+```{r}
+fit2<-smooth.spline(age,wage,cv = TRUE)
+fit2
+#It selects $\lambda=6.794596$ it is a Heuristic and can take various values for how rough the function is
+
+plot(age,wage,col="grey")
+#Plotting Regression Line
+lines(fit2,lwd=2,col="purple")
+legend("topright",("Smoothing Splines with 6.78 df selected by CV"),col="purple",lwd=2)
+
+
+```
+
+####This Model is also very Smooth and Fits the data well. 
+
+---
+
+
+
